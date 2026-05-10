@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor IP Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .current-ip {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .ip-label {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        .ip-address {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-secondary {
+            background: #cbd5e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #a0aec0;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .visitors-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .visitors-table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #667eea;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .ip-mono {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .export-format {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .export-format label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .export-format select {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #92400e;
+            font-size: 0.9em;
+        }
+
+        .info-box strong {
+            color: #b45309;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .ip-address {
+                font-size: 1.4em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Visitor IP Tracker</h1>
+        <p class="subtitle">Monitor and track visitor IP addresses</p>
+
+        <div class="current-ip">
+            <div class="ip-label">Your Current IP Address:</div>
+            <div class="ip-address" id="currentIP">Loading...</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="recordVisitor()">📍 Record Visit</button>
+            <button class="btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+            <button class="btn-secondary" onclick="exportData()">📥 Export Data</button>
+            <button class="btn-danger" onclick="clearData()">🗑️ Clear All</button>
+        </div>
+
+        <div class="info-box">
+            <strong>ℹ️ Note:</strong> This page uses browser localStorage to store visitor data locally on this device. Data is not sent to any server. Clearing your browser data will delete the stored records.
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Total Visits</div>
+                <div class="stat-value" id="totalVisits">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Unique IPs</div>
+                <div class="stat-value" id="uniqueIPs">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Latest Visit</div>
+                <div class="stat-value" id="latestVisit" style="font-size: 0.9em;">Never</div>
+            </div>
+        </div>
+
+        <div class="visitors-section">
+            <h2>📋 Visitor Log</h2>
+            <div class="visitors-table-wrapper">
+                <table id="visitorsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>IP Address</th>
+                            <th>Timestamp</th>
+                            <th>Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div>No visitor data yet. Click "Record Visit" to start tracking.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API to fetch IP address
+        const IP_API_URL = 'https://api.ipify.org?format=json';
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAndDisplayIP();
+            displayVisitors();
+        });
+
+        // Fetch current IP address
+        async function fetchIP() {
+            try {
+                const response = await fetch(IP_API_URL);
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+                return 'Unable to fetch';
+            }
+        }
+
+        // Display current IP on page load
+        async function fetchAndDisplayIP() {
+            const ip = await fetchIP();
+            document.getElementById('currentIP').textContent = ip;
+        }
+
+        // Record visitor IP
+        async function recordVisitor() {
+            const ip = await fetchIP();
+            const timestamp = new Date();
+            
+            let visitors = JSON.parse(localStorage.getItem('visitors')) || [];
+            
+            visitors.push({
+                ip: ip,
+                timestamp: timestamp.toISOString(),
+                date: timestamp.toLocaleString()
+            });
+            
+            localStorage.setItem('visitors', JSON.stringify(visitors));
+            displayVisitors();
+            
+            // Provide visual feedback
+            showNotification('✓ Visit recorded!');
+        }
+
+        // Display all visitors in table
+        function displayVisitors() {
+            const visitors = JSON.parse(localStorage.getItem('visitors')) || [];
+            const tableBody = document.getElementById('tableBody');
+            
+            if (visitors.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>No visitor data yet. Click "Record Visit" to start tracking.</div>
+                        </td>
+                    </tr>
+                `;
+                updateStats(0, 0, 'Never');
+                return;
+            }
+            
+            // Sort by timestamp (newest first)
+            visitors.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            tableBody.innerHTML = visitors.map((visitor, index) => `
+                <tr>
+                    <td>${visitors.length - index}</td>
+                    <td class="ip-mono">${visitor.ip}</td>
+                    <td class="timestamp">${new Date(visitor.timestamp).getTime()}</td>
+                    <td class="timestamp">${visitor.date}</td>
+                </tr>
+            `).join('');
+            
+            // Update statistics
+            const uniqueIPs = new Set(visitors.map(v => v.ip)).size;
+            const latestVisit = new Date(visitors[0].timestamp).toLocaleString();
+            updateStats(visitors.length, uniqueIPs, latestVisit);
+        }
+
+        // Update statistics
+        function updateStats(total, unique, latest) {
+            document.getElementById('totalVisits').textContent = total;
+            document.getElementById('uniqueIPs').textContent = unique;
+            document.getElementById('latestVisit').textContent = latest;
+        }
+
+        // Clear all data
+        function clearData() {
+            if (confirm('⚠️ Are you sure you want to delete all visitor records? This cannot be undone.')) {
+                localStorage.removeItem('visitors');
+                displayVisitors();
+                showNotification('✓ All data cleared!');
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            displayVisitors();
+            showNotification('✓ Data refreshed!');
+        }
+
+        // Export data
+        function exportData() {
+            const visitors = JSON.parse(localStorage.getItem('visitors')) || [];
+            
+            if (visitors.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            const csv = 'IP Address,Timestamp,Date & Time\n' +
+                visitors.map(v => `${v.ip},${v.timestamp},"${v.date}"`).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `visitor_ips_${new Date().getTime()}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('✓ Data exported as CSV!');
+        }
+
+        // Show temporary notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #48bb78;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Add animation for notification
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
